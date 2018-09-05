@@ -1,0 +1,99 @@
+---
+title: "JHU Data Products project 2"
+author: "Stephen Nex"
+date: "05/09/2018"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+rm(list=ls())
+setwd("~/Documents/DATA/Courses/4. JHU/10. Developing Data Products/Project 2 - plotly presentation")
+load("all_standings")
+library(ggplot2)
+library(plotly)
+library(knitr)
+opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
+```
+
+## Premier League team improvement over three seasons
+
+This is an R Markdown presentation, created with knitr output set to html presentation. 
+
+The presentation includes plotly interactive graphics.
+
+## Data
+The dataset is taken from the final premier league tables for seasons 1995-96 through to 2017-18.
+Additional variables have been encoded, including
+
+- How the team fared compared to the previous season and the change between that season and the one before
+- Whether a manager was sacked during the season
+- How many days the current manager has been in post
+
+## Creating a plot
+This code selects all the teams that finished at least 7 places higher in the previous season than the one before and plots these against the relative position this season compared to last.  Teams that were promoted are not considered.
+
+Consequently, teams above the black line continued to improve the third season, whereas teams below regressed.
+The bottom right portion of the plot shows teams that improved significantly the year before but came crashing back down the next season.
+
+```{r, echo = TRUE, tidy=TRUE, tidy.opts=list(width.cutoff=60)}
+g <- ggplot(all_standings[all_standings$penultimate > 7 & all_standings$penultimate !=23,], aes(x=penultimate,y=pos_this_last_diff, col=team)) +
+  geom_point() +
+  geom_hline(yintercept = 0) +
+  geom_text(aes(label=ifelse(penultimate > 13 | pos_this_last_diff > 5, as.character(team),''),hjust=0.8,vjust=-.5))
+```
+## ggplot output
+```{r, echo=FALSE}
+g
+```
+
+## Plotly
+This plot can be made interactive using ggplotly() to convert a ggplot object into a plotly object
+
+```{r}
+ggplotly(g)
+```
+
+## Improving the plot
+- Since plotly allows navigation around the plot, we can include more data points and allow the user to zoom in.
+
+- Since identification of teams is possible with the mouse pointer, we can remove the labels and instead colour code by type - this allows identification of which teams were relegated qualified for europe etc.
+
+- Shape of marker determines whether a new manager is in post this season
+
+- Size of marker denotes how long a manager has been in post
+
+## Code alteration
+First adjust x and y variables with minor noise in order to allow us to see overlapping points.
+
+```{r, echo=TRUE, tidy=TRUE, tidy.opts=list(width.cutoff=60)}
+all_standings$last_this <- all_standings$pos_this_last_diff +runif(460,-0.5,0.5)
+all_standings$penultimate_last <- all_standings$penultimate +runif(460,-0.5,0.5)
+all_standings$new_mgr <- ifelse(all_standings$new_manager==0,"No","Yes")
+
+g2 <- ggplot(all_standings[all_standings$penultimate !=23,], aes(x=penultimate_last,y=last_this, label=team, label2=season, label3=penultimate,label4=round(last_this),col=type, shape=as.factor(new_mgr), size=manager_tenure)) +
+  geom_point() +geom_hline(yintercept = 0) +
+  geom_vline(xintercept=0) +
+  xlim(-1,17) +
+  labs(x="penultimate season -> last season", y="last season -> this season", title="Performance of teams who improved last season on the year before")
+```
+
+## ggplot output
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+g2
+```
+
+## Plotly
+
+This plot can be made interactive using plotly as before.
+
+The labels for the interactive marker can be passed to it but the legend is suppressed since plotly does not interpret complicated ggplot legends correctly.
+
+
+## Final output
+
+```{r}
+p<- ggplotly(g2, tooltip=c("label","label2","colour","label3","label4", "shape","size"))
+hide_legend(p)
+```
+
