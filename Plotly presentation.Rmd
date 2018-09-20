@@ -9,7 +9,11 @@ output: ioslides_presentation
 knitr::opts_chunk$set(echo = FALSE)
 rm(list=ls())
 setwd("~/Documents/DATA/Courses/4. JHU/10. Developing Data Products/Project 2 - plotly presentation")
-load("all_standings")
+# First time only to create small data file
+#load("all_standings")
+#all_standings <- all_standings[,c(2,76,78,94,113,116,117)]
+#save(all_standings, file="trimmed_standings")
+load("trimmed_standings")
 library(ggplot2)
 library(plotly)
 library(knitr)
